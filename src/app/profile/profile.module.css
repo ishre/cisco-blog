@@ -1,0 +1,12 @@
+.userInfoContainer{
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+}
+.image{
+    border-radius: 50%;
+    margin-right: 10px;
+}
+.yourPosts{
+    margin-bottom: 10px;
+}
