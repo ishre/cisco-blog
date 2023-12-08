@@ -1,16 +1,20 @@
 "use client"
-
+import dynamic from "next/dynamic";
+import { useClient } from "next/client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { app } from "@/utils/firebase";
 import Image from "next/image";
-import ReactQuill from "react-quill";
 import "react-quill/dist/quill.bubble.css";
 import styles from "./write.module.css";
 
+// Dynamically import ReactQuill
+const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
+
 const Write = () => {
+  useClient();
   const { data: sessionData, status } = useSession();
   const [file, setFile] = useState(null);
   const [open, setOpen] = useState(false);
@@ -31,8 +35,7 @@ const Write = () => {
         uploadTask.on(
           "state_changed",
           (snapshot) => {
-            const progress =
-              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
             console.log("Upload is " + progress + "% done");
             switch (snapshot.state) {
               case "paused":
@@ -43,7 +46,7 @@ const Write = () => {
                 break;
             }
           },
-          (error) => { },
+          (error) => {},
           () => {
             getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
               setMedia(downloadURL);
@@ -108,22 +111,28 @@ const Write = () => {
         </button>
         {open && (
           <div className={styles.add}>
-          <input type="file" id="image1" style={{display : "none"}} onChange={e => setFile(e.target.files[0])}
-          />
-          <button className={styles.addButton}>
-            <label htmlFor="image1">
-              <Image src="/image.png" alt="Image" width={16} height={16} />
-            </label>
-          </button>
-          <button className={styles.addButton}>
-            <Image src="/external.png" alt="File" width={16} height={16} />
-          </button>
-          <button className={styles.addButton}>
-            <Image src="/video.png" alt="Video" width={16} height={16} />
-          </button>
-        </div>
+            <input type="file" id="image1" style={{ display: "none" }} onChange={(e) => setFile(e.target.files[0])} />
+            <button className={styles.addButton}>
+              <label htmlFor="image1">
+                <Image src="/image.png" alt="Image" width={16} height={16} />
+              </label>
+            </button>
+            <button className={styles.addButton}>
+              <Image src="/external.png" alt="File" width={16} height={16} />
+            </button>
+            <button className={styles.addButton}>
+              <Image src="/video.png" alt="Video" width={16} height={16} />
+            </button>
+          </div>
         )}
-        <ReactQuill className={styles.textArea} readOnly={false} theme="bubble" value={value} onChange={setValue} placeholder="Tell Your Story..." />
+        <ReactQuill
+          className={styles.textArea}
+          readOnly={false}
+          theme="bubble"
+          value={value}
+          onChange={setValue}
+          placeholder="Tell Your Story..."
+        />
       </div>
       <button className={styles.publish} onClick={handleSubmit}>
         Publish
