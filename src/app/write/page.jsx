@@ -1,23 +1,25 @@
-"use client"
 import dynamic from "next/dynamic";
 import { useClient } from "next/client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+} from "firebase/storage";
 import { app } from "@/utils/firebase";
 import Image from "next/image";
 import "react-quill/dist/quill.bubble.css";
 import styles from "./write.module.css";
 
-// Dynamically import ReactQuill
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
 const Write = () => {
   useClient();
   const { data: sessionData, status } = useSession();
   const [file, setFile] = useState(null);
-  const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const router = useRouter();
   const [title, setTitle] = useState("");
@@ -35,18 +37,13 @@ const Write = () => {
         uploadTask.on(
           "state_changed",
           (snapshot) => {
-            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            const progress =
+              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
             console.log("Upload is " + progress + "% done");
-            switch (snapshot.state) {
-              case "paused":
-                console.log("Upload is paused");
-                break;
-              case "running":
-                console.log("Upload is running");
-                break;
-            }
           },
-          (error) => {},
+          (error) => {
+            console.error("Error uploading file:", error);
+          },
           () => {
             getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
               setMedia(downloadURL);
@@ -79,7 +76,7 @@ const Write = () => {
           desc: value,
           img: media,
           slug: slugify(title),
-          catSlug: catSlug || "style", // If not selected, choose the style category
+          catSlug: catSlug || "style",
         }),
       });
 
@@ -97,28 +94,51 @@ const Write = () => {
 
   return (
     <div className={styles.container}>
-      <input type="text" placeholder="Title" className={styles.input} onChange={(e) => setTitle(e.target.value)} />
-      <select className={styles.select} onChange={(e) => setCatSlug(e.target.value)}>
-        {["style", "fashion", "food", "culture", "travel", "coding"].map((category) => (
-          <option key={category} value={category}>
-            {category}
-          </option>
-        ))}
+      <input
+        type="text"
+        placeholder="Title"
+        className={styles.input}
+        onChange={(e) => setTitle(e.target.value)}
+      />
+      <select
+        className={styles.select}
+        onChange={(e) => setCatSlug(e.target.value)}
+      >
+        {["style", "fashion", "food", "culture", "travel", "coding"].map(
+          (category) => (
+            <option key={category} value={category}>
+              {category}
+            </option>
+          )
+        )}
       </select>
       <div className={styles.editor}>
-        <button className={styles.button} onClick={() => setOpen(!open)}>
+        <button
+          className={styles.button}
+          onClick={() => setFile((prevFile) => !prevFile)}
+        >
           <Image src="/plus.png" alt="" width={16} height={16} />
         </button>
-        {open && (
+        {file && (
           <div className={styles.add}>
-            <input type="file" id="image1" style={{ display: "none" }} onChange={(e) => setFile(e.target.files[0])} />
+            <input
+              type="file"
+              id="image1"
+              style={{ display: "none" }}
+              onChange={(e) => setFile(e.target.files[0])}
+            />
             <button className={styles.addButton}>
               <label htmlFor="image1">
                 <Image src="/image.png" alt="Image" width={16} height={16} />
               </label>
             </button>
             <button className={styles.addButton}>
-              <Image src="/external.png" alt="File" width={16} height={16} />
+              <Image
+                src="/external.png"
+                alt="File"
+                width={16}
+                height={16}
+              />
             </button>
             <button className={styles.addButton}>
               <Image src="/video.png" alt="Video" width={16} height={16} />
